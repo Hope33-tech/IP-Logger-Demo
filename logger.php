@@ -1,27 +1,39 @@
 <?php
-// logger.php - يسجل المعلومات القانونية فقط
+require 'vendor/autoload.php';
 
-// نقرأ بيانات JSON من الـ POST
-$input = file_get_contents('php://input');
-$data = json_decode($input, true);
+use PHPSupabase\PHPSupabase;
 
-// نتحقق إذا في بيانات
-if($data) {
-    // نجهز معلومات الـ visitor
+$projectUrl = 'https://rjqbbeyzyvynlapmwpiy.supabase.co';
+$apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcWJiZXl6eXZ5bmxhcG13cGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1Mzg1NTAsImV4cCI6MjA3MjExNDU1MH0.h1MdgTuxhfYHme6DzX5P6FZDs7q6Ec3WfnXL5mDRZCY';
+
+$supabase = new PHPSupabase($projectUrl, $apiKey);
+
+// البيانات المستلمة من العميل
+$data = json_decode(file_get_contents('php://input'), true);
+
+// الحصول على IP الزائر
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ip = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+} else {
     $ip = $_SERVER['REMOTE_ADDR'];
-    $ts = date('Y-m-d H:i:s');
-
-    // المعلومات القانونية فقط
-    $userAgent = isset($data['userAgent']) ? $data['userAgent'] : 'N/A';
-    $platform  = isset($data['platform']) ? $data['platform'] : 'N/A';
-    $screen    = isset($data['screen']) ? $data['screen'] : 'N/A';
-    $timezone  = isset($data['timezone']) ? $data['timezone'] : 'N/A';
-    $language  = isset($data['language']) ? $data['language'] : 'N/A';
-
-    // نص السجل
-    $log = "$ts | $ip | $userAgent | $platform | $screen | $timezone | $language\n";
-
-    // نكتبها بملف visitors.log
-    file_put_contents('visitors.log', $log, FILE_APPEND);
 }
-?>
+
+// إضافة البيانات إلى جدول "visitors"
+$response = $supabase->from('visitors')->insert([
+    'ip_address' => $ip,
+    'user_agent' => $data['userAgent'] ?? '',
+    'language' => $data['language'] ?? '',
+    'platform' => $data['platform'] ?? '',
+    'screen' => $data['screen'] ?? '',
+    'timezone' => $data['timezone'] ?? '',
+    'memory' => $data['memory'] ?? '',
+    'cores' => $data['cores'] ?? '',
+]);
+
+if ($response->status() === 201) {
+    echo 'Data logged successfully';
+} else {
+    echo 'Error logging data';
+}
