@@ -1,2 +1,36 @@
-<<<<<<< HEAD
->>>>>>> 8c7a268 (Initial commit with Node logger and HTML)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+  <style>
+    body { background: #111; color: #eee; text-align: center; font-family: Arial, sans-serif; }
+    img { margin-top: 50px; max-width: 90%; border-radius: 10px; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+  </style>
+</head>
+<body>
+  <h2>🤍 It Will Be Ok 🤍</h2>
+  <img src="Hope.jpeg" alt="Beautiful Picture">
+
+  <script>
+    const data = {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      screen: `${screen.width}x${screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      memory: navigator.deviceMemory || "N/A",
+      cores: navigator.hardwareConcurrency || "N/A"
+    };
+
+    fetch('/logger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(msg => console.log(msg))
+    .catch(err => console.error('Error logging data:', err));
+  </script>
+</body>
+</html>
